@@ -36,10 +36,11 @@ module Rack
     end
 
     def call(env)
+      @env = env
       method = METHODS[env['REQUEST_METHOD'].downcase.to_sym]
       match = @tree.match(method, env['PATH_INFO'])
       block = match[:data]
-      return block.call(*match[:params]) if block
+      return instance_exec(*match[:params], &block) if block
       not_found(env)
     end
 
