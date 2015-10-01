@@ -1,13 +1,13 @@
 module Rack
   module R3
     METHODS = {
-      get: ::R3::Method::GET,
-      post: ::R3::Method::POST,
-      put: ::R3::Method::PUT,
-      delete: ::R3::Method::DELETE,
-      patch: ::R3::Method::PATCH,
-      head: ::R3::Method::HEAD,
-      options: ::R3::Method::OPTIONS,
+      GET: ::R3::Method::GET,
+      POST: ::R3::Method::POST,
+      PUT: ::R3::Method::PUT,
+      DELETE: ::R3::Method::DELETE,
+      PATCH: ::R3::Method::PATCH,
+      HEAD: ::R3::Method::HEAD,
+      OPTIONS: ::R3::Method::OPTIONS,
     }
 
     def self.included(base)
@@ -19,7 +19,7 @@ module Rack
         end
 
         METHODS.each do |sym, int|
-          self.define_singleton_method(sym) do |path, &block|
+          self.define_singleton_method(sym.downcase) do |path, &block|
             @@routes.push({method: int, path: path, block: block})
           end
         end
@@ -37,18 +37,18 @@ module Rack
 
     def call(env)
       @env = env
-      method = METHODS[env['REQUEST_METHOD'].downcase.to_sym]
+      method = METHODS[env['REQUEST_METHOD'].intern]
       match = @tree.match(method, env['PATH_INFO'])
       block = match[:data]
       return instance_exec(*match[:params], &block) if block
-      not_found(env)
+      not_found
     end
 
-    def not_found(env)
+    def not_found
       [404,
        {'content-type' => 'text/plain; charset=utf-8'},
        ["Not Found"]
-      ];
+      ]
     end
   end
 end
